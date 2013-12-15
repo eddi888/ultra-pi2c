@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+       http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+       ">
+
+    <!-- <bean id="properties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
+        <property name="location" value="file:/etc/pi2c/pi2c.properties" />
+    </bean>-->
+     
+     
+
+    <camelContext id="camel-context-pi2c" xmlns="http://camel.apache.org/schema/spring">
+
+        <errorHandler id="errorHandlerTwitterTemperature" type="DeadLetterChannel" deadLetterUri="activemq:twitter-temperature-error" />
+
+        <dataFormats>
+            <json id="jackson" library="Jackson" />
+        </dataFormats>
+
+        <route id="route-check-temperature-room-and-twitter" autoStartup="{{autoStartupConfig}}">
+            <from uri="quartz://pi2c/checkTemperatureRoom?cron=0+0/10+*+*+*+?" />
+            <process ref="lm75room" />
+            <to uri="activemq:twitter-temperature" pattern="InOnly" />
+        </route>
+
+        <route id="route-push-temperature">
+            <from uri="jetty:http://0.0.0.0:8999/twitter-room-temperature" />
+            <process ref="lm75room" />
+            <to uri="activemq:twitter-temperature" pattern="InOnly" />
+        </route>
+
+        <route id="route-twitter-message" errorHandlerRef="errorHandlerTwitterTemperature">
+            <from uri="activemq:twitter-temperature" />
+            <to uri="freemarker:measurement-result-template.ftl" />
+            <to uri="twitter://timeline/user?consumerKey={{consumerKey}}&amp;consumerSecret={{consumerSecret}}&amp;accessToken={{accessToken}}&amp;accessTokenSecret={{accessTokenSecret}}" />
+        </route>
+
+
+        <route id="route-room-temperatur">
+            <from uri="jetty:http://0.0.0.0:8999/view-room-temperatur" />
+            <process ref="lm75room" />
+            <to uri="freemarker:measurement-result-template.ftl" />
+        </route>
+
+        <route id="route-room-temperatur-json">
+            <from uri="jetty:http://0.0.0.0:8999/room" />
+            <process ref="lm75room" />
+            <marshal ref="jackson" />
+        </route>
+
+    </camelContext>
+
+</beans>
