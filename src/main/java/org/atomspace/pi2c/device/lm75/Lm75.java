@@ -25,6 +25,7 @@ import java.util.Date;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import org.apache.log4j.Logger;
 import org.atomspace.pi2c.device.AbstractDevice;
 import org.atomspace.pi2c.device.lm75.Lm75Value.Config;
 import org.atomspace.pi2c.device.lm75.Lm75Value.Mode;
@@ -40,6 +41,8 @@ public class Lm75 extends AbstractDevice {
     final public static String TEMPERATURE_ALARM_START = "temperatureAlarmStart";
     final public static String TEMPERATURE_ALARM_STOP = "temperatureAlarmStop";
     final public static String MEASUREMENT_TIME = "measurementTime";
+    
+    private static Logger log = Logger.getLogger(Lm75.class);
     
     boolean switchEnable = false;
 
@@ -64,7 +67,7 @@ public class Lm75 extends AbstractDevice {
         byte[] buffer = new byte[2];
         int readedBytes = this.read(0, buffer, 0, 2);
         
-        System.out.println("readTemperatur readedBytes: " + readedBytes);
+        log.trace("readTemperatur readedBytes: " + readedBytes);
 
         return convertBytesToTemperatur(buffer);
     }
@@ -77,8 +80,8 @@ public class Lm75 extends AbstractDevice {
     Config readConfiguration() throws IOException {
         byte[] buffer = new byte[1];
         int readedBytes = this.read(1,buffer, 0, 1);
-        System.out.println("readConfiguration readedBytes: " + readedBytes);
-        if(readedBytes>0) System.out.println("BUFFER0:"+ buffer[0]);;
+        log.trace("readConfiguration readedBytes: " + readedBytes);
+        if(readedBytes>0) log.trace("BUFFER0:"+ buffer[0]);;
         
         return convertBytesToConfig(buffer);
     }
@@ -92,9 +95,9 @@ public class Lm75 extends AbstractDevice {
 
         byte[] buffer = new byte[2];
         int readedBytes = this.read(3,buffer, 0, 2);
-        System.out.println("readTos readedBytes: " + readedBytes);
-        if(readedBytes>0) System.out.println("BUFFER0:"+ buffer[0]);;
-        if(readedBytes>1) System.out.println("BUFFER1:"+  buffer[1]);;
+        log.trace("readTos readedBytes: " + readedBytes);
+        if(readedBytes>0) log.trace("BUFFER0:"+ buffer[0]);;
+        if(readedBytes>1) log.trace("BUFFER1:"+  buffer[1]);;
         
         return convertBytesToTemperatur(buffer);
     }
@@ -108,9 +111,9 @@ public class Lm75 extends AbstractDevice {
 
         byte[] buffer = new byte[2];
         int readedBytes = this.read(2,buffer, 0, 2);
-        System.out.println("readThyst readedBytes: " + readedBytes);
-        if(readedBytes>0) System.out.println("BUFFER0:"+ buffer[0]);;
-        if(readedBytes>1) System.out.println("BUFFER1:"+  buffer[1]);;
+        log.trace("readThyst readedBytes: " + readedBytes);
+        if(readedBytes>0) log.trace("BUFFER0:"+ buffer[0]);;
+        if(readedBytes>1) log.trace("BUFFER1:"+  buffer[1]);;
         
         return convertBytesToTemperatur(buffer);
     }

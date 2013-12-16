@@ -23,12 +23,6 @@
        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
        ">
 
-    <!-- <bean id="properties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
-        <property name="location" value="file:/etc/pi2c/pi2c.properties" />
-    </bean>-->
-     
-     
-
     <camelContext id="camel-context-pi2c" xmlns="http://camel.apache.org/schema/spring">
 
         <errorHandler id="errorHandlerTwitterTemperature" type="DeadLetterChannel" deadLetterUri="activemq:twitter-temperature-error" />
@@ -38,7 +32,7 @@
         </dataFormats>
 
         <route id="route-check-temperature-room-and-twitter" autoStartup="{{autoStartupConfig}}">
-            <from uri="quartz://pi2c/checkTemperatureRoom?cron=0+0/10+*+*+*+?" />
+            <from uri="quartz://pi2c/checkTemperatureRoom?cron=0+5+*+*+*+?" />
             <process ref="lm75room" />
             <to uri="activemq:twitter-temperature" pattern="InOnly" />
         </route>
