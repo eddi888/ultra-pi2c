@@ -16,13 +16,14 @@
   limitations under the License.
 -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
-    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:jee="http://www.springframework.org/schema/jee" xmlns:jolokia="http://www.jolokia.org/jolokia-spring/schema/config"
     xsi:schemaLocation="
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+       http://www.jolokia.org/jolokia-spring/schema/config http://www.jolokia.org/jolokia-spring/schema/config/jolokia-config.xsd
        ">
-
+    
     <import resource="broker.xml" />
     <import resource="camel-config.xml" />
 
@@ -38,5 +39,9 @@
     <bean id="properties" class="org.apache.camel.component.properties.PropertiesComponent">
         <property name="location" value="file:/etc/pi2c/pi2c.properties"/>
     </bean>
+
+    <jolokia:agent lookupConfig="false" systemPropertiesMode="never">
+        <jolokia:config autoStart="true" host="127.0.0.1" port="8778" user="xxx" password="xxx" />
+    </jolokia:agent>
     
 </beans>
