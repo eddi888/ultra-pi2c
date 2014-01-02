@@ -77,6 +77,11 @@
             <marshal ref="jackson" />
         </route>
 
+        <route id="route-outside-temperatur">
+            <from uri="jetty:http://0.0.0.0:8999/view-outside-temperatur" />
+            <to uri="weather:foo?lat=52.39&amp;lon=12.93&amp;units=METRIC&amp;mode=XML" />
+        </route>
+
     </camelContext>
 
 </beans>

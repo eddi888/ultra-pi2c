@@ -35,7 +35,7 @@
         <xbean-spring.version>3.15</xbean-spring.version>
         <mockito.version>1.9.5</mockito.version>
         <jolokia.version>1.1.5</jolokia.version>
-        
+
         <slf4j.version>1.7.5</slf4j.version>
         <slf4j-api.version>1.6.6</slf4j-api.version>
         <log4j.version>1.2.17</log4j.version>
@@ -167,7 +167,7 @@
             <artifactId>jolokia-spring</artifactId>
             <version>${jolokia.version}</version>
         </dependency>
-        
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -278,8 +278,102 @@
                     <downloadJavadocs>true</downloadJavadocs>
                 </configuration>
             </plugin>
-			
+
+            <!-- XSD to JAVA PLUGIN -->
+            <plugin>
+                <groupId>org.apache.cxf</groupId>
+                <artifactId>cxf-xjc-plugin</artifactId>
+                <version>2.7.0</version>
+                <configuration>
+                    <extensions>
+                        <extension>org.apache.cxf.xjcplugins:cxf-xjc-dv:2.7.0</extension>
+                    </extensions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>xsdtojava</goal>
+                        </goals>
+                        <configuration>
+                            <strict>false</strict>
+                            <encoding>UTF-8</encoding>
+                            <sourceRoot>${project.build.directory}/generated/xsd</sourceRoot>
+
+                            <xsdOptions>
+                                <xsdOption>
+                                    <extension>true</extension>
+                                    <xsd>${basedir}/src/main/resources/schemas/openweathermap.xsd</xsd>
+                                    <packagename>org.atomspace.pi2c.openweathermap</packagename>
+                                    <bindingFile>${basedir}/src/main/resources/schemas/binding.xjb</bindingFile>
+                                </xsdOption>
+                            </xsdOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.cxf.xjcplugins</groupId>
+                        <artifactId>cxf-xjc-ts</artifactId>
+                        <version>2.7.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jvnet.jaxb2_commons</groupId>
+                        <artifactId>jaxb2-basics</artifactId>
+                        <version>0.6.5</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>xml2xsd</id>
+            <build>
+                <defaultGoal>initialize</defaultGoal>
+                <plugins>
+                    <!-- GENERATE A XSD FROM XML-EXAMPLE -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.2.1</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.thaiopensource</groupId>
+                                <artifactId>trang</artifactId>
+                                <version>20091111</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <includeProjectDependencies>false</includeProjectDependencies>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <mainClass>com.thaiopensource.relaxng.translate.Driver</mainClass>
+                            <arguments>
+                                <argument>src/test/resources/example/openweathermap-example.xml</argument>
+                                <argument>src/main/resources/schemas/openweathermap.xsd</argument>
+                            </arguments>
+                            <successCodes>
+                                <successCode>-1</successCode>
+                                <successCode>0</successCode>
+                                <successCode>1</successCode>
+                                <successCode>2</successCode>
+                            </successCodes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

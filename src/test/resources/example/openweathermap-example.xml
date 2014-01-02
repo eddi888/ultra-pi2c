@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<current>
+    <city id="2810945" name="Werder">
+        <coord lon="12.93" lat="52.39" />
+        <country>DE</country>
+        <sun rise="2014-01-02T07:17:59" set="2014-01-02T15:07:03" />
+    </city>
+    <temperature value="279.39" min="278.95" max="279.82" unit="kelvin" />
+    <humidity value="78" unit="%" />
+    <pressure value="1009" unit="hPa" />
+    <wind>
+        <speed value="5.46" name="" />
+        <direction value="229.502" code="SW" name="Southwest" />
+    </wind>
+    <clouds value="92" name="overcast clouds" />
+    <precipitation mode="no" />
+    <weather number="804" value="overcast clouds" icon="04n" />
+    <lastupdate value="2014-01-02T19:55:37" />
+</current>
