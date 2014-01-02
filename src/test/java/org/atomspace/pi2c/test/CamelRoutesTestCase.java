@@ -21,12 +21,17 @@ import static org.mockito.Mockito.doAnswer;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Route;
+import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.component.mock.AssertionClause;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.impl.DefaultRoute;
 import org.apache.camel.spring.SpringCamelContext;
@@ -42,7 +47,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -65,17 +69,15 @@ public class CamelRoutesTestCase extends CamelSpringTestSupport {
             Exchange exchange = (Exchange) objects[0];
             Message out = exchange.getOut();
 
-            out.setHeader(Lm75.TEMPERATURE, 20.5);
-            out.setHeader(Lm75.TEMPERATURE_ALARM_START, 80.0);
-            out.setHeader(Lm75.TEMPERATURE_ALARM_STOP, 75.0);
-            out.setHeader(Lm75.MEASUREMENT_TIME, new java.sql.Timestamp(new Date().getTime()));
-            
-            Lm75Value value = new Lm75Value();
-            value.setTemperature(20.5);
-            value.setTemperatureAlarmStart(80.0);
-            value.setTemperatureAlarmStop(75.0);
+            Lm75Value value = Helper.getLm75ValueBodyExample01(); 
             out.setBody(value);
 
+            out.setHeader(Lm75.TEMPERATURE, value.getTemperature());
+            out.setHeader(Lm75.TEMPERATURE_ALARM_START, value.getTemperatureAlarmStart());
+            out.setHeader(Lm75.TEMPERATURE_ALARM_STOP, value.getTemperatureAlarmStop());
+            out.setHeader(Lm75.MEASUREMENT_TIME, new java.sql.Timestamp(new Date().getTime()));
+            
+            
             return null;
         }
     };
@@ -85,33 +87,9 @@ public class CamelRoutesTestCase extends CamelSpringTestSupport {
         Lm75 lm75 = (Lm75) applicationContext.getBean("lm75room");
         doAnswer(lm75Answer).when(lm75).process(any(Exchange.class));
 
-        
         camelContext = (SpringCamelContext) applicationContext.getBean("camel-context-pi2c");
-
-        //Display Current loaded Routes and Endpoints for Easy Debugging
-        StringBuffer buffer = new StringBuffer();
-        buffer.append("\n####################################################");
-        buffer.append("\n#############   Routing Overview   #################");
-        buffer.append("\n####################################################");
-        List<Route> routes = camelContext.getRoutes();        
-        for (Route route : routes) {
-            DefaultRoute defaultRoute = (DefaultRoute) route;
-            
-            buffer.append("\n" + defaultRoute.getId());
-            buffer.append("\n     " + defaultRoute.getConsumer().getEndpoint().getEndpointUri()+ " Status:" +defaultRoute.getStatus());
-
-        }
-
-        buffer.append("\n####################################################");
-        buffer.append("\n#############  Endpoint Overview   #################");
-        buffer.append("\n####################################################");
-        Collection<Endpoint> endpoints = camelContext.getEndpoints();
-        for (Endpoint endpoint : endpoints) {
-            DefaultEndpoint defaultEndpoint = (DefaultEndpoint) endpoint;
-            buffer.append("\n" + defaultEndpoint.getEndpointUri());
-        }
+        Helper.logContextOverview(camelContext);
         
-        log.info(buffer);
     }
 
     @Test
@@ -152,5 +130,62 @@ public class CamelRoutesTestCase extends CamelSpringTestSupport {
             throw new Exception("Route 'route-twitter-message' is not stopped");
         }
     }
+
+    @Test
+    public void testRouteTwitterTemperature() throws Exception {
+        context.getRouteDefinition("route-twitter-message").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("toTwitterEndpoint").replace().to("mock:toTwitterEndpoint");
+            }
+        });
+        
+        Lm75Value body = Helper.getLm75ValueBodyExample01();
+        Map<String, Object> headers = Helper.getLm75ValueHeaderExample01();
+        
+        MockEndpoint toTwitterMock = getMockEndpoint("mock:toTwitterEndpoint");
+        
+        headers.put("mid", "333333333");
+        template.sendBodyAndHeaders("activemq:twitter-temperature", body, headers);
+        
+        toTwitterMock.expectedMessageCount(1);
+        assertMockEndpointsSatisfied();
+        assertEquals(true, toTwitterMock.getExchanges().get(0).getIn().getBody(String.class).indexOf("was the temperature 20,5")>0);
+        
+    }
+    
+    @Test
+    public void testRouteTwitterTemperatureFilterDuplicates() throws Exception {
+        context.getRouteDefinition("route-twitter-message").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                weaveById("toTwitterEndpoint").replace().to("mock:toTwitterEndpoint");
+            }
+        });
+        
+        Lm75Value body = Helper.getLm75ValueBodyExample01();
+        Map<String, Object> headers = Helper.getLm75ValueHeaderExample01();
+        Lm75Value bodyChanged = Helper.getLm75ValueBodyExample02();
+        Map<String, Object> headersChanged = Helper.getLm75ValueHeaderExample02();
+        
+        MockEndpoint toTwitterMock = getMockEndpoint("mock:toTwitterEndpoint");
+        
+        headers.put("mid", "444444444");
+        template.sendBodyAndHeaders("activemq:twitter-temperature", body, headers);
+        toTwitterMock.expectedMessageCount(1);
+        assertMockEndpointsSatisfied();
+
+        headers.put("mid", "555555555");
+        template.sendBodyAndHeaders("activemq:twitter-temperature", body, headers);
+        toTwitterMock.expectedMessageCount(1);
+        assertMockEndpointsSatisfied();
+        
+        headers.put("mid", "666666666");
+        template.sendBodyAndHeaders("activemq:twitter-temperature", bodyChanged, headersChanged);
+        toTwitterMock.expectedMessageCount(2);
+        assertMockEndpointsSatisfied();
+        
+    }
+
 
 }

@@ -23,6 +23,8 @@
        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
        ">
 
+    <bean id="remember" class="org.atomspace.pi2c.remember.Remember" />
+
     <camelContext id="camel-context-pi2c" xmlns="http://camel.apache.org/schema/spring">
 
         <errorHandler id="errorHandlerTwitterTemperature" type="DeadLetterChannel" deadLetterUri="activemq:twitter-temperature-error" />
@@ -45,8 +47,21 @@
 
         <route id="route-twitter-message" errorHandlerRef="errorHandlerTwitterTemperature">
             <from uri="activemq:twitter-temperature" />
-            <to uri="freemarker:measurement-result-template.ftl" />
-            <to uri="twitter://timeline/user?consumerKey={{consumerKey}}&amp;consumerSecret={{consumerSecret}}&amp;accessToken={{accessToken}}&amp;accessTokenSecret={{accessTokenSecret}}" />
+            <choice>
+                <when>
+                    <spel>#{request.headers['temperature'] != @remember.temperature}</spel>
+                    <to uri="log:com.mycompany.order?level=DEBUG"/>
+                    <to uri="freemarker:measurement-result-template.ftl" />
+                    <to id="toTwitterEndpoint" uri="twitter://timeline/user?consumerKey={{consumerKey}}&amp;consumerSecret={{consumerSecret}}&amp;accessToken={{accessToken}}&amp;accessTokenSecret={{accessTokenSecret}}" />
+                    <process ref="remember" />
+                </when>
+                <otherwise>
+                    <to uri="log:com.mycompany.order?level=DEBUG"/>
+                    <setBody>
+                        <constant>DUBLICATE TEMPERATURE, NOT NEED TO TWITTER</constant>
+                    </setBody>
+                </otherwise>
+            </choice>
         </route>
 
 

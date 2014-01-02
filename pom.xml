@@ -117,6 +117,11 @@
             <artifactId>camel-freemarker</artifactId>
             <version>${camel.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-weather</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
 
         <!-- ActiveMQ dependencies -->
         <dependency>
@@ -263,6 +268,17 @@
                 </configuration>
             </plugin>
 
+            <!--ECLIPSE PLUGIN FOR LOAD SOURCEs AND JAVA-DOCs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <version>2.9</version>
+                <configuration>
+                    <downloadSources>true</downloadSources>
+                    <downloadJavadocs>true</downloadJavadocs>
+                </configuration>
+            </plugin>
+			
         </plugins>
     </build>
 

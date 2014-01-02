@@ -38,4 +38,10 @@
         <property name="location" value="classpath:pi2c-test.properties"/>
     </bean>
     
+    <!-- bean which enables mocking twitter endpoints -->
+    <bean id="mockTwitterEndpoints" class="org.apache.camel.impl.InterceptSendToMockEndpointStrategy" >
+        <constructor-arg name="pattern" value="twitter*"/>
+        <constructor-arg name="skip" value="true" />
+    </bean>
+    
 </beans>
