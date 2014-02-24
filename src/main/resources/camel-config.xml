@@ -79,8 +79,16 @@
 
         <route id="route-outside-temperatur">
             <from uri="jetty:http://0.0.0.0:8999/view-outside-temperatur" />
-            <to uri="weather:foo?lat=52.39&amp;lon=12.93&amp;units=METRIC&amp;mode=XML" />
+            <to uri="weather:werder?lat=52.39&amp;lon=12.93&amp;units=METRIC&amp;mode=HTML" />
         </route>
+        
+        <route id="route-outside-temperatur-json">
+            <from uri="jetty:http://0.0.0.0:8999/outside" />
+            <to uri="weather:werder?lat=52.39&amp;lon=12.93&amp;units=METRIC&amp;mode=JSON" />
+        </route>
+        
+        <!-- TODO AGGREGATOR FOR CALC A DIFFERENCE FROM TEMPERATURE OUTSIDE AND ROOM -->
+        
 
     </camelContext>
 

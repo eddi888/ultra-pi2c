@@ -16,6 +16,8 @@
  */
 package org.atomspace.pi2c.remember;
 
+import java.sql.Timestamp;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.atomspace.pi2c.device.lm75.Lm75;
@@ -23,6 +25,7 @@ import org.atomspace.pi2c.device.lm75.Lm75;
 public class Remember implements Processor {
     
     private double temperature=0.0;
+    private Timestamp measurementTime=null;
 
     public double getTemperature() {
         return temperature;
@@ -31,10 +34,19 @@ public class Remember implements Processor {
     public void setTemperature(double temperature) {
         this.temperature = temperature;
     }
+    
+    public Timestamp getMeasurementTime() {
+        return measurementTime;
+    }
+
+    public void setMeasurementTime(Timestamp measurementTime) {
+        this.measurementTime = measurementTime;
+    }
 
     @Override
     public void process(Exchange exchange) throws Exception {
         this.temperature = exchange.getIn().getHeader(Lm75.TEMPERATURE, Double.class);
+        this.measurementTime = exchange.getIn().getHeader(Lm75.MEASUREMENT_TIME, java.sql.Timestamp.class);
     }
     
 }
